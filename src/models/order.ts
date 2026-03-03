@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { OrderStatus } from "@ajaisgtickets/common";
+import { updateIfCurrentPlugin } from "mongoose-update-if-current";
 interface OrderDoc extends mongoose.Document{
    version: number;
     userId: string;
@@ -55,5 +56,7 @@ orderSchema.statics.build=(attrs:OrderAttrs)=>{
 
     })
 }
+orderSchema.set('versionKey','version')
+orderSchema.plugin(updateIfCurrentPlugin)
 const Order=mongoose.model<OrderDoc,OrderModel>('Order',orderSchema)
 export{Order}

@@ -2,7 +2,7 @@
 import express, { Request, Response } from "express";
 import { currentUser } from "@ajaisgtickets/common";
 import cookieSession from "cookie-session";
-
+import { newChargeRouter } from "./routes/new";
 import { errorHandler } from "@ajaisgtickets/common";
 //@ts-ignore
 import { NotFoundError } from "@ajaisgtickets/common";
@@ -21,7 +21,7 @@ app.use(cookieSession({
 console.log('current user')
 app.use(currentUser)
 //very critical bug
-
+app.use(newChargeRouter)
 
 
 app.all('/{*splat}', async(req,res) => {

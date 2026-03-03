@@ -1,7 +1,8 @@
 import mongoose from 'mongoose'
 import { app } from './app'
 import { natsWrapper } from './nats-class-wrapper'
-
+import { OrderCancelledListener } from './events/listeners/order-cancelled-listener'
+import { OrderCreatedListener } from './events/listeners/order-created-listener'
 const startUp=async()=>{
   if(!process.env.JWT_KEY){
     throw new Error('No env variable')
@@ -20,6 +21,8 @@ const startUp=async()=>{
       console.log('closing')
       process.exit()
     })
+    new OrderCreatedListener(natsWrapper.client).listen()
+    new OrderCancelledListener(natsWrapper.client).listen()
    
     process.on('SIGINT',()=>natsWrapper.client.close())
     process.on('SIGTERM',()=>natsWrapper.client.close())
