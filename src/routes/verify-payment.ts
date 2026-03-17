@@ -2,10 +2,10 @@ import express, {Request,Response} from "express";
 import { body } from "express-validator";
 import {BadRequestError,requireAuth,validateRequest,NotAuthorizedError,NotFoundError,OrderStatus} from '@ajaisgtickets/common';
 import { Order } from "../models/order";
-import { razorpay } from "../razor";
+import { verifyPayment } from "../controller/verifysignature";
 const router=express.Router()
 
-router.post('/api/payments/',requireAuth,[
+router.post('/api/payments/verify-payment',requireAuth,[
     
     body('orderId').not().isEmpty()
 ],validateRequest,async (req:Request,res:Response)=>{
@@ -20,12 +20,33 @@ if(order.userId !== req.currentUser!.id){
 if(order.status === OrderStatus.Cancelled){
     throw new BadRequestError('badrequest in payments new: order cancelled')
 }
-await razorpay.orders.create({
-    currency: 'IND',
-    receipt: `resipt_${Date.now()}`,
-    amount: order.price*100,
-})
-res.send({ success: true,
-      order})
-})
-export {router as newChargeRouter}
+try {
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    } = req.body;
+
+    const isValid = verifyPayment(
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature
+    );
+
+    if (!isValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid payment",
+      });
+    }
+
+    // TODO: Save to DB
+    return res.json({
+      success: true,
+      message: "Payment verified",
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false });
+  }}
+)
+export {router as verifyPaymentSignature}

@@ -6,6 +6,7 @@ import { newChargeRouter } from "./routes/new";
 import { errorHandler } from "@ajaisgtickets/common";
 //@ts-ignore
 import { NotFoundError } from "@ajaisgtickets/common";
+import {  verifyPaymentSignature } from "./routes/verify-payment";
 const app = express();
 
 
@@ -22,7 +23,7 @@ console.log('current user')
 app.use(currentUser)
 //very critical bug
 app.use(newChargeRouter)
-
+app.use(verifyPaymentSignature)
 
 app.all('/{*splat}', async(req,res) => {
   console.log(req.url)
