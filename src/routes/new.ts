@@ -21,7 +21,7 @@ if(order.status === OrderStatus.Cancelled){
     throw new BadRequestError('badrequest in payments new: order cancelled')
 }
 await razorpay.orders.create({
-    currency: 'IND',
+    currency: 'INR',
     receipt: `resipt_${Date.now()}`,
     amount: order.price*100,
 })
