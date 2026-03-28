@@ -8,7 +8,7 @@ export const verifyPayment = (
   const body = `${orderId}|${paymentId}`;
 
   const expectedSignature = crypto
-    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET as string)
+    .createHmac("sha256", process.env.RAZOR_KEY as string)
     .update(body)
     .digest("hex");
 

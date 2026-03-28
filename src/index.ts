@@ -3,6 +3,7 @@ import { app } from './app'
 import { natsWrapper } from './nats-class-wrapper'
 import { OrderCancelledListener } from './events/listeners/order-cancelled-listener'
 import { OrderCreatedListener } from './events/listeners/order-created-listener'
+import { ExpirationCompleteListener } from './events/listeners/expiration-complete-listener'
 const startUp=async()=>{
   if(!process.env.JWT_KEY){
     throw new Error('No env variable')
@@ -23,6 +24,7 @@ const startUp=async()=>{
     })
     new OrderCreatedListener(natsWrapper.client).listen()
     new OrderCancelledListener(natsWrapper.client).listen()
+    new ExpirationCompleteListener(natsWrapper.client).listen()
    
     process.on('SIGINT',()=>natsWrapper.client.close())
     process.on('SIGTERM',()=>natsWrapper.client.close())
