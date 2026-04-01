@@ -6,8 +6,10 @@ import { verifyPayment } from "../controller/verifysignature";
 const router=express.Router()
 
 router.post('/api/payments/verify-payment',requireAuth,[
-    
-    body('orderId').not().isEmpty()
+    body('orderId').not().isEmpty(),
+    body('razorpay_order_id').not().isEmpty(),
+      body('razorpay_payment_id').not().isEmpty(),
+        body('razorpay_signature').not().isEmpty(),
 ],validateRequest,async (req:Request,res:Response)=>{
 const {orderId}=req.body;
 const order=await Order.findById(orderId)
