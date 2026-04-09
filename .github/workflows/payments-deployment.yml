@@ -1,0 +1,17 @@
+name: deploy-payments
+on: 
+    push:
+        branches: 
+          - main
+jobs:
+  build:
+
+          runs-on: ubuntu-latest
+          environment: Docker-secret
+          steps:
+            - uses: actions/checkout@v2 
+            - name: Debug username
+              run: echo "USERNAME=${{ secrets.DOCKERUSERNAME }}"
+            - run: echo "${{ secrets.ORIGINALDOCKERTOKENPASSWORD }}" | docker login -u "${{ secrets.DOCKERUSERNAME }}" --password-stdin
+            - run:  docker build -t ${{ secrets.DOCKERUSERNAME }}/payments .
+            - run: docker push ${{ secrets.DOCKERUSERNAME }}/payments
