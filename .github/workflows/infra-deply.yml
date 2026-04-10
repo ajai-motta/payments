@@ -1,9 +1,8 @@
-name: deploy-payments
-on:
-  workflow_run:
-    workflows: ["deploy"]
-    types:
-      - completed
+name: deploy
+on: 
+    push:
+        branches: 
+          - main
 jobs:
   build:
 
@@ -11,11 +10,7 @@ jobs:
           environment: Docker-secret
           steps:
             - uses: actions/checkout@v2 
-            - name: Debug username
-              run: echo "USERNAME=${{ secrets.DOCKERUSERNAME }}"
-            - run: echo "${{ secrets.ORIGINALDOCKERTOKENPASSWORD }}" | docker login -u "${{ secrets.DOCKERUSERNAME }}" --password-stdin
-            - run:  docker build -t ${{ secrets.DOCKERUSERNAME }}/payments .
-            - run: docker push ${{ secrets.DOCKERUSERNAME }}/payments
+           
             - name: Auth to GCP
               uses: google-github-actions/auth@v2
               with:
@@ -28,7 +23,7 @@ jobs:
             - name: Verify
               run: gcloud projects list
             - name: Install GKE auth plugin
-              run: |
+              run: |  
                    gcloud components install gke-gcloud-auth-plugin --quiet
            
             - name: Get GKE credentials
@@ -40,4 +35,12 @@ jobs:
               run: |
                   kubectl config current-context
                   kubectl get nodes
-            - run: kubectl rollout restart deployment payments-depl
+            - name: Deploy only if not exists
+              run: |
+               set -e
+
+               if kubectl get deployment payments-depl > /dev/null 2>&1; then
+                  echo "Deployment already exists. Skipping..."
+               else
+                  kubectl apply -f k8s/
+               fi
