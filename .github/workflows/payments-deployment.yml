@@ -1,8 +1,9 @@
 name: deploy-payments
-on: 
-    push:
-        branches: 
-          - main
+on:
+  workflow_run:
+    workflows: ["deploy"]
+    types:
+      - completed
 jobs:
   build:
 
@@ -15,3 +16,28 @@ jobs:
             - run: echo "${{ secrets.ORIGINALDOCKERTOKENPASSWORD }}" | docker login -u "${{ secrets.DOCKERUSERNAME }}" --password-stdin
             - run:  docker build -t ${{ secrets.DOCKERUSERNAME }}/payments .
             - run: docker push ${{ secrets.DOCKERUSERNAME }}/payments
+            - name: Auth to GCP
+              uses: google-github-actions/auth@v2
+              with:
+                credentials_json: '${{ secrets.GCS_SECRET }}'
+            
+            - name: Setup gcloud
+              uses: google-github-actions/setup-gcloud@v2
+              with:
+                project_id: ${{ secrets.GCP_PROJECT_ID }}
+            - name: Verify
+              run: gcloud projects list
+            - name: Install GKE auth plugin
+              run: |
+                   gcloud components install gke-gcloud-auth-plugin --quiet
+           
+            - name: Get GKE credentials
+              run: |
+                gcloud container clusters get-credentials ticketing \
+                 --region ${{ secrets.GCP_REGION }} \
+                  --project ${{ secrets.GCP_PROJECT_ID }}
+            - name: Check context
+              run: |
+                  kubectl config current-context
+                  kubectl get nodes
+            - run: kubectl rollout restart deployment payments-depl
