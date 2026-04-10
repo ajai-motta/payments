@@ -1,0 +1,46 @@
+name: deploy
+on: 
+    push:
+        branches: 
+          - main
+jobs:
+  build:
+
+          runs-on: ubuntu-latest
+          environment: Docker-secret
+          steps:
+            - uses: actions/checkout@v2 
+           
+            - name: Auth to GCP
+              uses: google-github-actions/auth@v2
+              with:
+                credentials_json: '${{ secrets.GCS_SECRET }}'
+            
+            - name: Setup gcloud
+              uses: google-github-actions/setup-gcloud@v2
+              with:
+                project_id: ${{ secrets.GCP_PROJECT_ID }}
+            - name: Verify
+              run: gcloud projects list
+            - name: Install GKE auth plugin
+              run: |  
+                   gcloud components install gke-gcloud-auth-plugin --quiet
+           
+            - name: Get GKE credentials
+              run: |
+                gcloud container clusters get-credentials ticketing \
+                 --region ${{ secrets.GCP_REGION }} \
+                  --project ${{ secrets.GCP_PROJECT_ID }}
+            - name: Check context
+              run: |
+                  kubectl config current-context
+                  kubectl get nodes
+            - name: Deploy only if not exists
+              run: |
+               set -e
+
+               if kubectl get deployment payments-depl > /dev/null 2>&1; then
+                  echo "Deployment already exists. Skipping..."
+               else
+                  kubectl apply -f k8s/
+               fi
